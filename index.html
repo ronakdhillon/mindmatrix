@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindMatrix - Memory Recall Challenge</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f5ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          },
+          animation: {
+            'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 3s ease-in-out infinite',
+            'pop': 'pop 0.2s ease-out',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0)' },
+              '50%': { transform: 'translateY(-6px)' },
+            },
+            pop: {
+              '0%': { transform: 'scale(0.95)' },
+              '50%': { transform: 'scale(1.05)' },
+              '100%': { transform: 'scale(1)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    
+    /* Card Interactions */
+    .card-interactive {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card-interactive:hover {
+      transform: translateY(-4px);
+    }
+    
+    /* Glassmorphic panel styling */
+    .glass-panel {
+      background: rgba(30, 41, 59, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-brain text-xl text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-indigo-300">
+            MindMatrix
+          </h1>
+          <p class="text-xs text-slate-400 font-medium">Visual Memory Recall Lab</p>
+        </div>
+      </div>
+      
+      <!-- Sound Toggle -->
+      <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-semibold border border-slate-700/50">
+        <i id="soundIcon" class="fa-solid fa-volume-high text-indigo-400"></i>
+        <span id="soundText" class="hidden sm:inline">Sound ON</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-5xl w-full mx-auto px-4 py-6 flex-1 flex flex-col justify-center items-center">
+
+    <!-- START SCREEN -->
+    <section id="startScreen" class="w-full max-w-2xl text-center space-y-8 py-8">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+        <i class="fa-solid fa-bolt text-xs"></i> Test Your Brain's Speed
+      </div>
+      
+      <div class="space-y-3">
+        <h2 class="text-4xl sm:text-5xl font-black tracking-tight text-white">
+          Sharpen Your <br>
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+            Visual Memory
+          </span>
+        </h2>
+        <p class="text-slate-400 text-base max-w-lg mx-auto leading-relaxed">
+          Memorize target icons in 10 seconds, then pick them out from a crowded grid within 30 seconds!
+        </p>
+      </div>
+
+      <!-- How It Works Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+        <div class="p-5 rounded-2xl glass-panel border border-slate-800">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm mb-3">1</div>
+          <h3 class="font-bold text-slate-200 text-sm mb-1">Memorize</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Observe <strong>8 objects</strong> shown on screen during a <strong>10-second timer</strong>.</p>
+        </div>
+        <div class="p-5 rounded-2xl glass-panel border border-slate-800">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-sm mb-3">2</div>
+          <h3 class="font-bold text-slate-200 text-sm mb-1">Select</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">Pick the original objects out of <strong>24 total options</strong> within <strong>30 seconds</strong>.</p>
+        </div>
+        <div class="p-5 rounded-2xl glass-panel border border-slate-800">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm mb-3">3</div>
+          <h3 class="font-bold text-slate-200 text-sm mb-1">Scoring</h3>
+          <p class="text-xs text-slate-400 leading-relaxed"><strong class="text-emerald-400">+1 Point</strong> for correct hits, <strong class="text-rose-400">-1 Point</strong> for wrong picks.</p>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <div>
+        <button id="startGameBtn" onclick="startGame()" class="group relative inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white font-bold text-lg shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer">
+          <span>Start Memory Game</span>
+          <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition-transform"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- PHASE 1: MEMORIZATION SCREEN -->
+    <section id="memorizeScreen" class="w-full max-w-4xl space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl glass-panel border border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full bg-indigo-500 animate-ping"></div>
+          <div>
+            <h2 class="text-lg font-bold text-white">Phase 1: Memorization</h2>
+            <p class="text-xs text-slate-400">Memorize these 8 items before time runs out!</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700/60">
+          <i class="fa-regular fa-clock text-indigo-400"></i>
+          <span id="memTimerText" class="text-2xl font-black text-indigo-300 font-mono">10s</span>
+        </div>
+      </div>
+
+      <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+        <div id="memProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full w-full transition-all duration-100 ease-linear"></div>
+      </div>
+
+      <div id="targetGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 pt-2">
+        <!-- Target items injected via JS -->
+      </div>
+    </section>
+
+    <!-- PHASE 2: SELECTION SCREEN -->
+    <section id="selectionScreen" class="w-full max-w-4xl space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl glass-panel border border-slate-800">
+        <div>
+          <h2 class="text-lg font-bold text-white">Phase 2: Recall & Select</h2>
+          <p class="text-xs text-slate-400">Select the 8 target objects you memorized. Max 10 selections.</p>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700/60 flex items-center gap-2">
+            <i class="fa-solid fa-hand-pointer text-purple-400 text-sm"></i>
+            <span class="text-xs text-slate-400">Selected:</span>
+            <span id="selectionCounter" class="text-lg font-black text-purple-300 font-mono">0 / 10</span>
+          </div>
+
+          <div class="bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700/60 flex items-center gap-2">
+            <i class="fa-regular fa-clock text-amber-400 text-sm"></i>
+            <span id="selectTimerText" class="text-xl font-black text-amber-300 font-mono">30s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="w-full bg-slate-900 h-2.5 rounded-full overflow-hidden border border-slate-800">
+        <div id="selectProgressBar" class="bg-gradient-to-r from-purple-500 to-amber-500 h-full w-full transition-all duration-100 ease-linear"></div>
+      </div>
+
+      <div id="selectionGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
+        <!-- 24 Mixed items injected via JS -->
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button id="submitPicksBtn" onclick="submitPicks()" disabled class="px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm transition-all duration-200 cursor-not-allowed border border-slate-700/50 flex items-center gap-2 shadow-lg">
+          <i class="fa-solid fa-check"></i>
+          <span>Submit Answers</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- PHASE 3: RESULTS SCREEN -->
+    <section id="resultsScreen" class="w-full max-w-4xl space-y-8 hidden py-4">
+      <div class="p-6 sm:p-8 rounded-3xl glass-panel border border-slate-700/60 text-center relative overflow-hidden">
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-semibold mb-4">
+          <i class="fa-solid fa-trophy text-amber-400"></i> Final Results
+        </div>
+
+        <div class="space-y-1 mb-6">
+          <div class="text-5xl sm:text-7xl font-black tracking-tight text-white">
+            <span id="finalScoreDisplay" class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400">0</span>
+            <span class="text-2xl sm:text-4xl text-slate-500 font-normal"> / 8</span>
+          </div>
+          <p id="feedbackTitle" class="text-base font-bold text-slate-300">Great Effort!</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 max-w-lg mx-auto">
+          <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <div class="text-xs text-emerald-400 font-medium mb-1">Correct (+1)</div>
+            <div id="statCorrect" class="text-xl font-black text-emerald-300">0</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
+            <div class="text-xs text-rose-400 font-medium mb-1">Wrong (-1)</div>
+            <div id="statIncorrect" class="text-xl font-black text-rose-300">0</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center">
+            <div class="text-xs text-amber-400 font-medium mb-1">Missed</div>
+            <div id="statMissed" class="text-xl font-black text-amber-300">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-indigo-400"></i> Detailed Review
+        </h3>
+        <div id="resultsGrid" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 sm:gap-4">
+          <!-- Results injected via JS -->
+        </div>
+      </div>
+
+      <div class="text-center pt-4">
+        <button onclick="startGame()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-lg shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer inline-flex items-center gap-3">
+          <i class="fa-solid fa-rotate-right"></i>
+          <span>Play Again</span>
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
+    <p>MindMatrix Memory Challenge &copy; 2026</p>
+  </footer>
+
+  <script>
+    const MASTER_ITEMS = [
+      { id: 'apple', label: 'Apple', emoji: '🍎' },
+      { id: 'bicycle', label: 'Bicycle', emoji: '🚲' },
+      { id: 'diamond', label: 'Diamond', emoji: '💎' },
+      { id: 'rocket', label: 'Rocket', emoji: '🚀' },
+      { id: 'camera', label: 'Camera', emoji: '📷' },
+      { id: 'guitar', label: 'Guitar', emoji: '🎸' },
+      { id: 'compass', label: 'Compass', emoji: '🧭' },
+      { id: 'anchor', label: 'Anchor', emoji: '⚓' },
+      { id: 'telescope', label: 'Telescope', emoji: '🔭' },
+      { id: 'balloon', label: 'Balloon', emoji: '🎈' },
+      { id: 'crown', label: 'Crown', emoji: '👑' },
+      { id: 'lightning', label: 'Lightning', emoji: '⚡' },
+      { id: 'pizza', label: 'Pizza', emoji: '🍕' },
+      { id: 'skull', label: 'Skull', emoji: '💀' },
+      { id: 'magnet', label: 'Magnet', emoji: '🧲' },
+      { id: 'key', label: 'Golden Key', emoji: '🔑' },
+      { id: 'hourglass', label: 'Hourglass', emoji: '⏳' },
+      { id: 'bell', label: 'Bell', emoji: '🔔' },
+      { id: 'palmtree', label: 'Palm Tree', emoji: '🌴' },
+      { id: 'fire', label: 'Fire', emoji: '🔥' },
+      { id: 'gem', label: 'Crystal', emoji: '🔮' },
+      { id: 'umbrella', label: 'Umbrella', emoji: '☂️' },
+      { id: 'target', label: 'Bullseye', emoji: '🎯' },
+      { id: 'ring', label: 'Ring', emoji: '💍' },
+      { id: 'cactus', label: 'Cactus', emoji: '🌵' },
+      { id: 'alien', label: 'Alien', emoji: '👾' },
+      { id: 'dice', label: 'Dice', emoji: '🎲' },
+      { id: 'donut', label: 'Donut', emoji: '🍩' },
+      { id: 'trophy', label: 'Trophy', emoji: '🏆' },
+      { id: 'ghost', label: 'Ghost', emoji: '👻' },
+      { id: 'robot', label: 'Robot', emoji: '🤖' },
+      { id: 'clover', label: 'Clover', emoji: '🍀' },
+      { id: 'headphone', label: 'Headphones', emoji: '🎧' },
+      { id: 'paint', label: 'Palette', emoji: '🎨' }
+    ];
+
+    let targetItems = [];
+    let selectionGridItems = [];
+    let selectedItemIds = new Set();
+    let isSoundEnabled = true;
+
+    let timerInterval = null;
+    let timeRemaining = 0;
+    const MEMORIZE_DURATION = 10;
+    const SELECTION_DURATION = 30;
+    const MAX_SELECTIONS = 10;
+
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function toggleSound() {
+      isSoundEnabled = !isSoundEnabled;
+      const icon = document.getElementById('soundIcon');
+      const text = document.getElementById('soundText');
+      if (isSoundEnabled) {
+        icon.className = "fa-solid fa-volume-high text-indigo-400";
+        text.textContent = "Sound ON";
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-slate-500";
+        text.textContent = "Sound OFF";
+      }
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.1, gainVal = 0.15) {
+      if (!isSoundEnabled) return;
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playSound(type) {
+      if (!isSoundEnabled) return;
+      if (type === 'select') playTone(587.33, 'sine', 0.08, 0.15);
+      else if (type === 'deselect') playTone(349.23, 'sine', 0.08, 0.12);
+      else if (type === 'start') {
+        [392.00, 493.88, 587.33, 783.99].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.12, 0.15), i * 60));
+      } else if (type === 'finish') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((f, i) => setTimeout(() => playTone(f, 'sine', 0.2, 0.15), i * 90));
+      } else if (type === 'tick') playTone(800, 'square', 0.03, 0.03);
+    }
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function showScreen(screenId) {
+      ['startScreen', 'memorizeScreen', 'selectionScreen', 'resultsScreen'].forEach(id => {
+        document.getElementById(id).classList.toggle('hidden', id !== screenId);
+      });
+    }
+
+    function clearIntervalIfActive() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function startGame() {
+      playSound('start');
+      selectedItemIds.clear();
+
+      const shuffledMaster = shuffleArray(MASTER_ITEMS);
+      targetItems = shuffledMaster.slice(0, 8);
+      const distractors = shuffledMaster.slice(8, 24);
+      selectionGridItems = shuffleArray([...targetItems, ...distractors]);
+
+      renderMemorizeGrid();
+      showScreen('memorizeScreen');
+      startMemorizeTimer();
+    }
+
+    function renderMemorizeGrid() {
+      const grid = document.getElementById('targetGrid');
+      grid.innerHTML = targetItems.map(item => `
+        <div class="card-interactive glass-panel rounded-2xl p-5 border border-indigo-500/30 flex flex-col items-center justify-center gap-3 text-center">
+          <div class="text-5xl sm:text-6xl select-none">${item.emoji}</div>
+          <span class="text-xs font-bold text-slate-300 tracking-wide uppercase">${item.label}</span>
+        </div>
+      `).join('');
+    }
+
+    function startMemorizeTimer() {
+      clearIntervalIfActive();
+      timeRemaining = MEMORIZE_DURATION;
+      const timerText = document.getElementById('memTimerText');
+      const progressBar = document.getElementById('memProgressBar');
+      
+      timerText.textContent = `${timeRemaining}s`;
+      progressBar.style.width = '100%';
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        timerText.textContent = `${timeRemaining}s`;
+        progressBar.style.width = `${(timeRemaining / MEMORIZE_DURATION) * 100}%`;
+        if (timeRemaining <= 3 && timeRemaining > 0) playSound('tick');
+        if (timeRemaining <= 0) {
+          clearIntervalIfActive();
+          startSelectionPhase();
+        }
+      }, 1000);
+    }
+
+    function startSelectionPhase() {
+      playSound('start');
+      showScreen('selectionScreen');
+      renderSelectionGrid();
+      updateSelectionUI();
+      startSelectionTimer();
+    }
+
+    function renderSelectionGrid() {
+      const grid = document.getElementById('selectionGrid');
+      grid.innerHTML = selectionGridItems.map(item => `
+        <button 
+          id="item-card-${item.id}" 
+          onclick="toggleItemSelection('${item.id}')"
+          class="card-interactive glass-panel rounded-xl p-3 sm:p-4 border border-slate-800 hover:border-slate-700 flex flex-col items-center justify-center gap-2 text-center group relative cursor-pointer outline-none"
+        >
+          <div id="check-badge-${item.id}" class="absolute top-2 right-2 w-5 h-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center opacity-0 scale-75 transition-all">
+            <i class="fa-solid fa-check text-[10px]"></i>
+          </div>
+          <div class="text-3xl sm:text-4xl select-none">${item.emoji}</div>
+          <span class="text-[11px] font-semibold text-slate-400 truncate w-full">${item.label}</span>
+        </button>
+      `).join('');
+    }
+
+    function toggleItemSelection(itemId) {
+      if (selectedItemIds.has(itemId)) {
+        selectedItemIds.delete(itemId);
+        playSound('deselect');
+      } else {
+        if (selectedItemIds.size >= MAX_SELECTIONS) return;
+        selectedItemIds.add(itemId);
+        playSound('select');
+      }
+      updateCardStyle(itemId);
+      updateSelectionUI();
+    }
+
+    function updateCardStyle(itemId) {
+      const card = document.getElementById(`item-card-${itemId}`);
+      const badge = document.getElementById(`check-badge-${itemId}`);
+      const isSelected = selectedItemIds.has(itemId);
+
+      if (isSelected) {
+        card.classList.remove('border-slate-800');
+        card.classList.add('border-purple-500', 'bg-purple-950/30');
+        badge.classList.remove('opacity-0', 'scale-75');
+        badge.classList.add('opacity-100', 'scale-100');
+      } else {
+        card.classList.remove('border-purple-500', 'bg-purple-950/30');
+        card.classList.add('border-slate-800');
+        badge.classList.remove('opacity-100', 'scale-100');
+        badge.classList.add('opacity-0', 'scale-75');
+      }
+    }
+
+    function updateSelectionUI() {
+      const count = selectedItemIds.size;
+      document.getElementById('selectionCounter').textContent = `${count} / ${MAX_SELECTIONS}`;
+      const submitBtn = document.getElementById('submitPicksBtn');
+      if (count > 0) {
+        submitBtn.disabled = false;
+        submitBtn.className = "px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-sm shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center gap-2";
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.className = "px-8 py-3.5 rounded-xl bg-slate-800 text-slate-500 font-bold text-sm cursor-not-allowed border border-slate-700/50 flex items-center gap-2";
+      }
+    }
+
+    function startSelectionTimer() {
+      clearIntervalIfActive();
+      timeRemaining = SELECTION_DURATION;
+      const timerText = document.getElementById('selectTimerText');
+      const progressBar = document.getElementById('selectProgressBar');
+
+      timerText.textContent = `${timeRemaining}s`;
+      progressBar.style.width = '100%';
+
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        timerText.textContent = `${timeRemaining}s`;
+        progressBar.style.width = `${(timeRemaining / SELECTION_DURATION) * 100}%`;
+        if (timeRemaining <= 5 && timeRemaining > 0) playSound('tick');
+        if (timeRemaining <= 0) {
+          clearIntervalIfActive();
+          submitPicks();
+        }
+      }, 1000);
+    }
+
+    function submitPicks() {
+      clearIntervalIfActive();
+      playSound('finish');
+      const targetSet = new Set(targetItems.map(item => item.id));
+
+      let correctHits = 0;
+      let wrongPicks = 0;
+
+      selectedItemIds.forEach(id => {
+        if (targetSet.has(id)) correctHits++;
+        else wrongPicks++;
+      });
+
+      const missedTargets = targetItems.length - correctHits;
+      const netScore = Math.max(0, correctHits - wrongPicks);
+
+      document.getElementById('finalScoreDisplay').textContent = netScore;
+      document.getElementById('statCorrect').textContent = correctHits;
+      document.getElementById('statIncorrect').textContent = wrongPicks;
+      document.getElementById('statMissed').textContent = missedTargets;
+
+      const titleEl = document.getElementById('feedbackTitle');
+      if (netScore === 8) titleEl.textContent = "🌟 Perfect Photographic Memory!";
+      else if (netScore >= 5) titleEl.textContent = "🎉 Impressive Recall!";
+      else titleEl.textContent = "🧠 Practice Makes Perfect!";
+
+      renderResultsGrid(targetSet);
+      showScreen('resultsScreen');
+    }
+
+    function renderResultsGrid(targetSet) {
+      const grid = document.getElementById('resultsGrid');
+      grid.innerHTML = selectionGridItems.map(item => {
+        const isTarget = targetSet.has(item.id);
+        const isSelected = selectedItemIds.has(item.id);
+        let cardBorder = "border-slate-800 opacity-60";
+        let badgeHtml = "";
+
+        if (isTarget && isSelected) {
+          cardBorder = "border-emerald-500 bg-emerald-950/30";
+          badgeHtml = `<div class="absolute -top-2 -right-2 bg-emerald-500 text-slate-950 text-xs px-2 py-0.5 rounded-full font-bold">Hit</div>`;
+        } else if (!isTarget && isSelected) {
+          cardBorder = "border-rose-500 bg-rose-950/30";
+          badgeHtml = `<div class="absolute -top-2 -right-2 bg-rose-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">Wrong</div>`;
+        } else if (isTarget && !isSelected) {
+          cardBorder = "border-amber-500/70 bg-amber-950/20";
+          badgeHtml = `<div class="absolute -top-2 -right-2 bg-amber-500 text-slate-950 text-xs px-2 py-0.5 rounded-full font-bold">Missed</div>`;
+        }
+
+        return `
+          <div class="relative rounded-xl p-3 sm:p-4 border ${cardBorder} glass-panel flex flex-col items-center justify-center gap-2 text-center">
+            ${badgeHtml}
+            <div class="text-3xl sm:text-4xl select-none">${item.emoji}</div>
+            <span class="text-[11px] font-semibold text-slate-300 truncate w-full">${item.label}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.onload = function() {
+      showScreen('startScreen');
+    };
+  </script>
+</body>
+</html>
+```
